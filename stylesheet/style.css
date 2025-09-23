@@ -1,0 +1,35 @@
+:root{
+    --midnightBlack : #0D0D0D;
+    --racingRed: #D72638;
+    --stellGray: #4f4f4f;
+    --electricBlue: #00B4D8;
+    --asphaltGray: #1E1E1E;
+    --silver: #C0C0C0;
+}
+
+body{
+    margin: 0;
+    background-color: var(--asphaltGray);
+    
+}
+
+/* header */
+
+nav{
+    background-color: var(--racingRed);
+    margin: 0 200px;
+}
+
+ul{
+    color: var(--silver);
+    border: 2px solid var(--electricBlue);
+    border-style: 10px;
+    list-style: none;
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+}
+
+li:nth-child(2){
+    padding-left: 10px;
+}
