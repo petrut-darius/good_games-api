@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>Add a car.</h1><br>
+
+    <div id="msg"></div>
+
+    <input type="text" id="marca" placeholder="marca..."><br><br>
+    <input type="text" id="model" placeholder="model..."><br><br>
+    <input type="date" id="an" placeholder="an..."><br><br>
+    <input type="text" id="serie_sasiu" placeholder="serie sasiu..."><br><br>
+    <input type="text" id="numar_inmatriculare" placeholder="numar de inmatriculare..."><br><br>
+    <input type="button" id="btn" value="add..."><br><br>
+    
+    <script src="jquery.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $("#btn").on("click", function() {
+                let marca = $("#marca").val();
+                let model = $("#model").val();
+                let an = $("#an").val();
+                let serie_sasiu = $("#serie_sasiu").val();
+                let numar_inmatriculare = $("#numar_inmatriculare").val();
+                
+                if (!marca || !model || !an || !serie_sasiu || !numar_inmatriculare) {
+                    $("#msg").html("Completează toate câmpurile.");
+                    return;
+                }
+
+                $.post("../../api/api_call.php", { marca: marca, model: model, an: an, serie_sasiu: serie_sasiu, numar_inmatriculare: numar_inmatriculare}, function(msg) {
+                    $("#msg").html(msg);
+                }, "json").fail(function() {
+                    $("#msg").html("erorare.<br>");
+                }).always(function() {
+                    $("#msg").append("request completat.<br>");
+                }).done(function() {
+                    $("#msg").append("request realizat cu succes.<br>");
+                });
+            });
+        });
+    </script>
+</body>
+</html>

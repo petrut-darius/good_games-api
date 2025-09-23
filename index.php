@@ -12,18 +12,21 @@
 
 
     <input type="button" value="get all games." id="btn">
-
-
-
     <div id="output"></div>
 
-    <script src="views/jquery.js" type></script>
-    <script>
+    <script src="views/jquery.js" type="text/javascript"></script>
+    <script type="text/javascript">
         $(document).ready(function() {
             $("#btn").on("click", function() {
-                $.get("api/api_call.php", { id: }, function(data) {
-                    $("#output").html("<b>" + data["name"] + "</b> and is in stock? <b>" + (data["in_stock"] ? "true" : "false") + "</b>.<br>", "json");
-                });
+                $.get("api/api_call.php", null, function(data) {
+                    let output = "";
+                    data.forEach(function(car) {
+                        output += '<span>' + car["marca"] +  " " + car["model"] + '</span><br>';
+                    });
+
+                    $("#output").html(output);
+
+                }, "json");
             });
         });
     </script>
