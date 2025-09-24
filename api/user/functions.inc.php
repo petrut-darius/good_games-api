@@ -6,8 +6,10 @@ function gateway(string $request_method) {
     
     switch($request_method){
         case "GET":
-            return json_encode(get_all_users($db), JSON_PRETTY_PRINT);
-        case "POST":    
+            return json_encode(["msg" => "why get request."], JSON_PRETTY_PRINT);
+            break;
+        case "POST":  
+            //signup  
             if( isset($_POST["first_name"]) && !empty($_POST["first_name"])
                 && isset($_POST["last_name"]) && !empty($_POST["last_name"])
                 && isset($_POST["birth_date"]) && !empty($_POST["birth_date"])
@@ -32,15 +34,50 @@ function gateway(string $request_method) {
                     
                     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-                    return json_encode( add_user($db, $first_name, $last_name, $birth_date, $hashed_password, $hashed_password, $email), JSON_PRETTY_PRINT);
-
+                    return json_encode(add_user($db, $first_name, $last_name, $birth_date, $hashed_password, $hashed_password, $email), JSON_PRETTY_PRINT);
+                    break;
                 }
-                break;
+
+            //login
+            if(isset($_POST["email"]) && !empty($_POST["email"]) && isset($_POST["password"]) && !empty($_POST["password"])) {
+                $email = $_POST["email"];
+                $password = $_POST["password"];
+
+                login_user($db, $email, $password);
+
+            }                
+            break;
         case "PATCH":
         case "PUT":
-                
-        case "DELETE":
+            if(isset($_SESSION["user_id"]) && !empty($_SESSION["user_id"])) {
+                $user_id = $_SESSION["user_id"];
+                if(isset($_POST["password"]) && !empty($_POST["password"]) && isset($_POST["password_again"]) && !empty($_POST["password_again"])) {
+                    $password = $_POST["password"];
+                    $password_again = $_POST["password_again"];
 
+                        //regex
+
+                    if($password !== $password_again) {
+                        return json_encode(["msg" => "the password are not identical."], JSON_PRETTY_PRINT);
+                    }
+
+
+                        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+                    
+                    
+                    if(update_password($db, $user_id, $password)) {
+                        return json_encode(["msg"] => "you updated your password.", JSON_PRETTY_PRINT);
+                    }
+                }
+            }
+        case "DELETE":
+            if(isset($_SESSION["user_id"]) && !empty($_SESSION["user_id"])) {
+                if(user_log_out()) {
+                    return json_encode(["msg" => "log out complete."], JSON_PRETTY_PRINT);
+                }else{
+                    return json_encode(["msg" => "we couldn't log you out."], JSON_PRETTY_PRINT);
+                }
+            }
         default:
     }
 
@@ -63,6 +100,8 @@ function db_connection():mysqli {
     return $db_connection;
 }
 
+
+/* this is an admin function
 function get_all_users(mysqli $db):array {
     $query = "SELECT * FROM `users`";
 
@@ -75,23 +114,49 @@ function get_all_users(mysqli $db):array {
 
     return $games;
 }
+*/
 
-function get_user($db, $id):array {
-    $query = "SELECT * FROM `users` WHERE id = ?";
+function login_user(mysqli $db, $email, $password):array {
+    $query = "SELECT * FROM `users` WHERE email = ?";
     $stmt = $db->prepare($query);
-    $stmt->bind_param("i", $id);
+    $stmt->bind_param("s", $email);
     $stmt->execute();
     $result = $stmt->get_result();
-
     $num_rows = $result->num_rows;
-    $game = $result->fetch_assoc();
 
+    if($num_rows === 1) {
+        $user = $result->fetch_assoc();
+
+        if(password_verify($password, $user["password"])) {
+            session_start();
+            session_regenerate_id(true);
+            $_SESSION["user_id"] = $user["id"];
+            return json_encode(["msg" => "you are loged in as " . $user["first_name"] . " " . $user["last_name"] . "."], JSON_PRETTY_PRINT);
+        }else{
+            return json_encode(["msg" => "password invalid."], JSON_PRETTY_PRINT);
+        }
+    }else{
+        return json_encode(["msg" => "user not found."], JSON_PRETTY_PRINT);
+    }
     $stmt->close();
 
-    return [$user, $num_rows];
 }
 
-function add_user($db, $first_name, $last_name, $birth_date, $password, $password_again, $email) {
+function get_user_data(mysqli $db,int $id,string $column_name) {
+    $allowed = ["first_name", "last_name", "email"];
+
+    if(in_array($column_name, $allowed)) {
+        $query = "SELECT " . $column_name . " FROM `users` WHERE id = ?";
+        $stmt = $db->prepare($query);
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        return $stmt->fetch_assoc();
+    }else{ 
+        return false;
+    }
+}
+
+function add_user(mysqli $db, $first_name, $last_name, $birth_date, $password, $password_again, $email) {
     $query = "INSERT INTO `users` (first_name, last_name, birth_date, password, password_again, email) VALUES (?, ?, ?, ?, ?)";
     $stmt = $db->prepare($query);
     $stmt->bind_param("ssssss", $first_name, $last_name, $birth_date, $password, $password_again, $email);
@@ -100,24 +165,21 @@ function add_user($db, $first_name, $last_name, $birth_date, $password, $passwor
     return $result;
 }
 
-function update_user($db, int $id, array $params, array $fields, string $types) {
-    $query = "UPDATE `users` SET " . implode(",", $fields) . " WHERE id = " . $id;
+function update_password(mysqli $db, int $id, $password) {
+    $query = "UPDATE `users` SET (password, password_again) VALUES (?, ?) WHERE id = " . $id;
     $stmt = $db->prepare($query);
-    $stmt->bind_param($types, ...$params);
+    $stmt->bind_param("ss", $password, $password);
     $result = $stmt->execute();
     $stmt->close();
 
     return $result;
 }
 
-function delete_game($db, $car_id) {
-    $query = "DELETE FROM `users` WHERE id = ?";
-    $stmt = $db->prepare($query);
-    $stmt->bind_param("i", $car_id);
-    $stmt->execute();
-    $affected_rows = $stmt->affected_rows;
-    $stmt->close();
-    return ($affected_rows > 0);
+function user_log_out() {
+    session_start();
+    session_unset();
+    session_destroy();
+    return true;
 }
 
 ?>
