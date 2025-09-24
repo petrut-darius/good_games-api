@@ -1,0 +1,16 @@
+<button type="button" value="delete..." id="delete_btn" car-id='<?php echo $car["id"] ?>'></button>
+<script src="jquery.js" type="text/javascript"></script>
+<script type="text/javascript">
+    $(document).ready(function() {
+        $("#delete_btn").on("click", function() {
+            let numar_inmatriculare = $("#numar_inmatriculare").val();
+
+            if(!numar_inmatriculare) {
+                $("#msg").html("<b>Completeaza campul.</b>");
+            }
+
+            //delete request
+
+        });
+    });
+</script>

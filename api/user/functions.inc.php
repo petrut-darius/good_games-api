@@ -34,7 +34,7 @@ function gateway(string $request_method) {
                     
                     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-                    return json_encode(add_user($db, $first_name, $last_name, $birth_date, $hashed_password, $hashed_password, $email), JSON_PRETTY_PRINT);
+                    return json_encode(add_user($db, $first_name, $last_name, $birth_date, $hashed_password, $email), JSON_PRETTY_PRINT);
                     break;
                 }
 
@@ -156,19 +156,19 @@ function get_user_data(mysqli $db,int $id,string $column_name) {
     }
 }
 
-function add_user(mysqli $db, $first_name, $last_name, $birth_date, $password, $password_again, $email) {
-    $query = "INSERT INTO `users` (first_name, last_name, birth_date, password, password_again, email) VALUES (?, ?, ?, ?, ?)";
+function add_user(mysqli $db, $first_name, $last_name, $birth_date, $password, $email) {
+    $query = "INSERT INTO `users` (first_name, last_name, birth_date, password, email) VALUES (?, ?, ?, ?, ?)";
     $stmt = $db->prepare($query);
-    $stmt->bind_param("ssssss", $first_name, $last_name, $birth_date, $password, $password_again, $email);
+    $stmt->bind_param("sssss", $first_name, $last_name, $birth_date, $password, $email);
     $result = $stmt->execute();
     $stmt->close();
     return $result;
 }
 
 function update_password(mysqli $db, int $id, $password) {
-    $query = "UPDATE `users` SET (password, password_again) VALUES (?, ?) WHERE id = " . $id;
+    $query = "UPDATE `users` SET (password) VALUES (?) WHERE id = " . $id;
     $stmt = $db->prepare($query);
-    $stmt->bind_param("ss", $password, $password);
+    $stmt->bind_param("s", $password);
     $result = $stmt->execute();
     $stmt->close();
 

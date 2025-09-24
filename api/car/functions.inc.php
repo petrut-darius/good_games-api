@@ -63,47 +63,35 @@ function gateway(string $request_method) {
             break;
         case "PATCH":
         case "PUT":
-            if(isset($_GET["id"]) && !empty($_GET["id"]) && ((isset($_GET["name"]) && !empty($_GET["name"])) || (isset($_GET["in_stock"]) && !empty($_GET["in_stock"])))) {
-                $id = $_GET["id"];
-                $name = $_GET["name"] ?? null;
-                $stock = $_GET["in_stock"] ?? null;
-                $types = "";
-                if($name != null) {
-                    $fields[] = "name = ?";
-                    $params[] = $name;
-                    $types .= "s";
-                }
+            parse_str(file_get_contents("php://input", $update));
+            if(isset($update["numar_inmatriculare"]) && !empty($update["numar_inmatriculare"]) && isset($update["id"]) && !empty($update["id"])) {
+                $numar_inmatriculare = $update["numar_inmatriculare"];
+                $id = $update["id"];
 
-                if($stock != null) {
-                    $fields[] = "in_stock = ?";
-                    $params[] = $stock;
-                    $types .= "i";
-                }
-
-                if(empty($fields) || empty($params) || empty($types)) {
-                    return json_encode(["msg" => "problem with getting data."], JSON_PRETTY_PRINT);
-                }
-
-                if(!empty($fields) && !empty($params) && !empty($types)) {
-                    $result = update_data($db, $id, $params, $fields, $types);
-                    return json_encode(["msg" => "updated the game with id: " . $id], JSON_PRETTY_PRINT);
+                if(update_car($db, $id, $numar_inmatriculare)) {
+                    return json_encode(["msg" => "you updated the number."], JSON_PRETTY_PRINT);
+                }else{
+                    return json_encode(["msg" => "query error."], JSON_PRETTY_PRINT);
                 }
 
             }else{
-                return json_encode(["msg" => "problem with the params you inserted."], JSON_PRETTY_PRINT);
+                return json_encode(["msg" => "the ajax call did not send the update params"], JSON_PRETTY_PRINT);
             }
 
             break;
         case "DELETE":
-            if(isset($_GET["name"]) && !empty($_GET["name"])) {
-                $name = $_GET["name"];
-                if($result = delete_game($db,$name)) {
-                    return json_encode(["msg" => "you deleted " . $name . "."], JSON_PRETTY_PRINT);
+            parse_str(file_get_contents("php://input", $delete));
+            if(isset($delete["id"]) && !empty($delete["id"])) {
+                $id = $delete["id"];
+
+                if(delete_car($db, $id )) {
+                    return json_encode(["msg" => "you deleted the car."], JSON_PRETTY_PRINT);
                 }else{
-                    return json_encode(["msg" => $name . " is not saved in the db, so you can't delete it."], JSON_PRETTY_PRINT);
+                    return json_encode(["msg" => "query error."], JSON_PRETTY_PRINT);
                 }
+
             }else{
-                return json_encode(["msg" => "problem with the params you inserted."], JSON_PRETTY_PRINT);
+                return json_encode(["msg" => "the ajax call did not send the delete params"], JSON_PRETTY_PRINT);
             }
 
 
@@ -130,7 +118,7 @@ function db_connection():mysqli {
     return $db_connection;
 }
 
-function get_all_data(mysqli $db):array {
+function get_all_cars(mysqli $db):array {
     $query = "SELECT * FROM `cars` WHERE in_stock = 1";
 
     $result = $db->query($query);
@@ -143,7 +131,7 @@ function get_all_data(mysqli $db):array {
     return $games;
 }
 
-function get_data($db, $id):array {
+function get_car($db, $id):array {
     $query = "SELECT * FROM `cars` WHERE id = ?";
     $stmt = $db->prepare($query);
     $stmt->bind_param("i", $id);
@@ -167,17 +155,17 @@ function add_car($db, $marca, $model, $an, $serie_sasiu, $numar_inmatriculare) {
     return $result;
 }
 
-function update_data($db, int $id, array $params, array $fields, string $types) {
-    $query = "UPDATE `games` SET " . implode(",", $fields) . " WHERE id = " . $id;
+function update_car($db, int $id, $numar_inmatriculare) {
+    $query = "UPDATE `games` SET (numar_inmatriculare) VALUES(?) WHERE id = " . $id;
     $stmt = $db->prepare($query);
-    $stmt->bind_param($types, ...$params);
+    $stmt->bind_param($numar_inmatriculare);
     $result = $stmt->execute();
     $stmt->close();
 
     return $result;
 }
 
-function delete_game($db, $car_id) {
+function delete_car($db, $car_id) {
     $query = "DELETE FROM `cars` WHERE id = ?";
     $stmt = $db->prepare($query);
     $stmt->bind_param("i", $car_id);
