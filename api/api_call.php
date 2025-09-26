@@ -1,6 +1,6 @@
 <?php
 header('Content-type: application/json');
-require_once "cars/functions.inc.php";
+require_once "car/functions.inc.php";
 //require_once "router.php";
 
 

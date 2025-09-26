@@ -8,7 +8,7 @@ function gateway(string $request_method) {
         case "GET":
             if(isset($_GET["id"]) && $_GET["id"]) {
                 $id = $_GET["id"];
-                if($data = get_data($db, $id)){
+                if($data = get_car($db, $id)){
                     if($data[1] >= 2) {
                         return json_encode(["msg" => "query error."], JSON_PRETTY_PRINT);
                         //break;
@@ -23,7 +23,7 @@ function gateway(string $request_method) {
                     //break;
                 }
             }else{
-                return json_encode(get_all_data($db), JSON_PRETTY_PRINT);
+                return json_encode(get_all_cars($db), JSON_PRETTY_PRINT);
                 //break;
             }
             break;
@@ -110,7 +110,7 @@ function db_connection():mysqli {
 
     try{
         $db_connection = new mysqli($host, $user, $password);
-        mysqli_select_db($db_connection, "test");
+        mysqli_select_db($db_connection, "car-info");
     }catch(mysqli_sql_exception $e){
         echo "error: " . $e->getMessage() . " at line: " . $e->getLine();
     }
@@ -119,7 +119,7 @@ function db_connection():mysqli {
 }
 
 function get_all_cars(mysqli $db):array {
-    $query = "SELECT * FROM `cars` WHERE in_stock = 1";
+    $query = "SELECT * FROM `cars`";
 
     $result = $db->query($query);
     $games = [];

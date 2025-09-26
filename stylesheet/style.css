@@ -22,6 +22,12 @@ header {
     z-index: 1000;
 }
 
+header nav{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 header nav ul {
     list-style: none;
     display: flex;
@@ -47,4 +53,17 @@ header nav ul li:hover {
 
 header nav ul li:active {
     color: var(--racingRed);
+}
+
+h1{
+    text-align: center;
+    color: #C0C0C0;
+}
+
+span{
+    color: #C0C0C0;
+}
+
+.delete_btn{
+    margin: 10px 0;
 }
